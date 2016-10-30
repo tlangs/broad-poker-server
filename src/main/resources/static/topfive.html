@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Broad Interview Poker</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Bootstrap -->
+    <link href="css/bootstrap/bootstrap.min.css" rel="stylesheet" media="screen">
+</head>
+<body>
+<nav class="navbar navbar-inverse">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="/">Broad Poker</a>
+    </div>
+</nav>
+<div class="container">
+
+    <div class="row">
+        <div class="col-sm-12">
+            <form class="form-inline" onsubmit="drawHand(); return false">
+                <div class="form-group">
+                    <label for="numberOfCards">How many cards should be drawn?</label>
+                    <input value="10" type="number" class="form-control" id="numberOfCards">
+                </div>
+                <button type="button" class="btn btn-primary" onclick="drawHand()">Draw cards</button>
+            </form>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-sm-12" id="handColumn" hidden>
+            <h4>Your hand is:</h4>
+            <div id="drawnCards" style="word-wrap:break-word"></div>
+            <br>
+            <br>
+            <button class="btn btn-default" onclick="computeHand()">Compute the best hand</button>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-sm-6" id="resultColumn" hidden>
+            <h4>The best combination is:</h4>
+            <span id="bestCombo"></span>
+        </div>
+
+    </div>
+
+</div> <!-- /container -->
+<script src="js/jquery/jquery-3.1.1.min.js"></script>
+<script src="js/bootstrap/bootstrap.min.js"></script>
+
+<script>
+
+    var hand;
+
+    function drawHand() {
+        $("#resultColumn").hide();
+        var numCards = $("#numberOfCards").val();
+        if (numCards < 5 || numCards > 52) {
+            alert("Too few or too many cards");
+            return;
+        }
+        $.get("poker/drawBigHand?numCards="+numCards, function (data) {
+            hand = JSON.stringify(data);
+            $("#handColumn").show();
+            $("#drawnCards").html(hand);
+        })
+    }
+
+    function computeHand() {
+        $.ajax({
+            type: "POST",
+            url: "poker/bestSubset",
+            data: hand,
+            success: function (data) {
+                $("#resultColumn").show();
+                $("#bestCombo").html(data);
+            },
+            contentType: "application/json"
+        });
+    }
+</script>
+</body>
+</html>

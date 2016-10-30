@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Broad Interview Poker</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Bootstrap -->
+    <link href="css/bootstrap/bootstrap.min.css" rel="stylesheet" media="screen">
+</head>
+<body>
+<nav class="navbar navbar-inverse">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="/">Broad Poker</a>
+    </div>
+</nav>
+<div class="container">
+
+    <div class="row">
+        <div class="col-sm-12">
+            <button class="btn btn-primary" onclick="drawHands()">Draw 2 hands</button>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-sm-6" id="handColumn" hidden>
+            <h4>Player One's hand is:</h4>
+            <span id="playerOneHand"></span>
+            <h4>Player Two's hand is:</h4>
+            <span id="playerTwoHand"></span>
+            <br>
+            <br>
+            <button class="btn btn-default" onclick="findWinner()">Find a winner</button>
+        </div>
+        <div class="col-sm-6" id="resultColumn" hidden>
+            <h4>The result is:</h4>
+            <span id="winner"></span>
+        </div>
+
+    </div>
+
+</div> <!-- /container -->
+<script src="js/jquery/jquery-3.1.1.min.js"></script>
+<script src="js/bootstrap/bootstrap.min.js"></script>
+
+<script>
+
+    var hand1;
+    var hand2;
+
+    function drawHands() {
+        $("#resultColumn").hide();
+        $.get("poker/drawHands?numHands=2", function (data) {
+            hand1 = data[0];
+            hand2 = data[1];
+            $("#handColumn").show();
+            $("#playerOneHand").html(JSON.stringify(hand1));
+            $("#playerTwoHand").html(JSON.stringify(hand2));
+        })
+    }
+
+    function handToString(h) {
+        return h.rank + JSON.stringify(h.rankCards) +
+        ", Kickers" + JSON.stringify(h.kickerCards);
+    }
+
+    function findWinner() {
+        $.ajax({
+            type: "POST",
+            url: "poker/findWinner",
+            data: JSON.stringify([hand1, hand2]),
+            success: function (data) {
+                $("#resultColumn").show();
+                var result = data.gameResult;
+                var hands = data.winningHands;
+
+                var status;
+                var winningHand;
+
+                switch (result) {
+                    case "PLAYER_ONE_WIN":
+                        status = "Player One wins";
+                        winningHand = handToString(hands[0]);
+                        break;
+                    case "PLAYER_TWO_WIN":
+                        status = "Player Two wins";
+                        winningHand = handToString(hands[0]);
+                        break;
+                    case "TIE":
+                        status = "There was a tie. Split the pot!";
+                        winningHand = "Player One:\n" +
+                                        handToString(hands[0]) +
+                                        "\nPlayer Two:\n" +
+                                        handToString(hands[1]);
+                }
+
+                $("#winner").html(status + "<br>" + winningHand);
+
+
+            },
+            contentType: "application/json"
+        });
+    }
+</script>
+</body>
+</html>
